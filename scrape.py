@@ -1,5 +1,7 @@
 from flask import Flask
-from flask import render_template
+from flask import render_template, redirect
+import scrape_mars
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -15,3 +17,11 @@ def add_header(response):
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '-1'
     return response
+
+
+@app.route('/scrapeMars')
+def scrapeMars():
+	marsData = scrape_mars.scrapeMars()
+	scrape_mars.storeInDb(marsData)
+	data = scrape_mars.getData()
+	return render_template('scrapeMars.html', data=data)

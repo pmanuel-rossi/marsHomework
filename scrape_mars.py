@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup as bs
 import requests
 from splinter import Browser
 import pymongo
+import re
 
 
 conn = 'mongodb://localhost:27017'
@@ -39,10 +40,8 @@ def scrapeMars():
 		marsWeatherTwitterUrl = f"https://twitter.com/marswxreport?lang=en"
 		browser.visit(marsWeatherTwitterUrl)
 		soup = bs(browser.html, 'html.parser')
-		mars_weather = soup.find("div", class_="js-tweet-text-container")
-		mars_weather = mars_weather.p.get_text("|").split("|")[0]
-		mars_weather = mars_weather.replace("\n", ", ")
-
+		mars_weather = soup.find('p', class_="TweetTextSize TweetTextSize--normal js-tweet-text tweet-text").text
+		mars_weather = soup.find('p', text = re.compile('InSight'), attrs = {'class' : 'TweetTextSize TweetTextSize--normal js-tweet-text tweet-text'}).text
 
 		# Mars Facts
 		marsFactsUrl = f"https://space-facts.com/mars/"
@@ -81,6 +80,7 @@ def scrapeMars():
 
 
 def storeInDb(data):
+	conn = 'mongodb://localhost:27017'
 	client = pymongo.MongoClient(conn)
 	db = client.Mars
 	db.MarsData.drop()
@@ -88,10 +88,11 @@ def storeInDb(data):
 	client.close()
 
 
-def retrieveData():
-	client = pymongo.MongoClient(conn)
-	db = client.Mars
-	item = db.MarsData.find_one()
-	print(item)
-	client.close()
-	return item
+def getData():
+    conn = 'mongodb://localhost:27017'
+    client = pymongo.MongoClient(conn)
+    db = client.Mars
+    collection = db.MarsData
+    data = collection.find_one()
+    return data
+
